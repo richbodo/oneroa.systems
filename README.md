@@ -48,15 +48,66 @@ Headings use Jost, a Futura-style geometric sans; body text uses Source Serif 4.
 
 ## Hosting
 
-GitHub Pages. `.github/workflows/pages.yml` publishes `site/` on every push to `main`; the custom domain is set in the repo's Settings → Pages, not in a `CNAME` file. The domain is registered at Namecheap, and its DNS points at GitHub Pages:
+GitHub Pages serves the site, Cloudflare runs the DNS and the mail forwarding, and Namecheap is the registrar. `.github/workflows/pages.yml` publishes `site/` on every push to `main`. The custom domain is set in the repo's Settings → Pages, not in a `CNAME` file.
 
-| Type | Host | Value |
-|---|---|---|
-| A | @ | 185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153 |
-| AAAA | @ | 2606:50c0:8000::153, 2606:50c0:8001::153, 2606:50c0:8002::153, 2606:50c0:8003::153 |
-| CNAME | www | richbodo.github.io. |
-| TXT | \_github-pages-challenge-richbodo | the code GitHub gives when verifying the domain |
+### Moving the DNS to Cloudflare
 
-## Not decided yet
+1. In Cloudflare, Add a domain → `oneroa.systems` → Free plan. Cloudflare copies the records Namecheap has now.
+2. Delete the copied parking and forwarding records: the `@` record pointing at 162.255.119.189, `www` → parkingpage.namecheap.com, the five `eforward` MX records, and the TXT record starting `v=spf1 include:spf.efwd`.
+3. Add the records in the table below.
+4. Copy the two nameservers Cloudflare shows on this domain's Overview page (both end in `.ns.cloudflare.com`). Cloudflare gives each domain its own pair, even within one account, so don't reuse another domain's: socialnetwork.health's pair refuses to answer for oneroa.systems. In Namecheap, Domain List → oneroa.systems → Manage → Nameservers → Custom DNS, paste both, and save. Namecheap's own mail forwarding stops here.
+5. Verify the domain with GitHub. GitHub doesn't send the code; you ask for it. In Rich's account settings (github.com/settings/pages, not the repo's), click Add a domain and enter `oneroa.systems`. GitHub shows a TXT record; add it in Cloudflare, then click Verify. Verify only passes once the new nameservers have spread, so it can take a few tries. Verifying stops any other GitHub account from serving a site on the domain.
+6. GitHub issues the certificate within about an hour of the DNS pointing at it. Then tick Enforce HTTPS in the repo's Settings → Pages. If no certificate starts (the repo's Settings → Pages shows no progress), the custom domain was probably saved before the DNS was ready: remove it, save, add it back, and save.
+7. Set up mail (below).
 
-- The email address on the contact page.
+`scripts/dns-status oneroa.systems` in Rich's `rbops` repo shows how far a nameserver change has spread.
+
+### DNS records
+
+Set every website record to **DNS only** (grey cloud), not Proxied. Cloudflare proxies copied records by default, and GitHub can't issue a certificate through the proxy.
+
+| Type | Name | Content | Proxy |
+|---|---|---|---|
+| A | `@` | four records: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153` | DNS only |
+| AAAA | `@` | four records: `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` | DNS only |
+| CNAME | `www` | `richbodo.github.io` | DNS only |
+| TXT | `_github-pages-challenge-richbodo` | the code GitHub shows when you add the domain (step 5) | |
+
+Cloudflare adds the domain to each Name, so `www` means www.oneroa.systems. `richbodo.github.io` is GitHub's address for all of Rich's Pages sites; GitHub picks this repo because its custom domain is `oneroa.systems`, and it redirects www to the bare domain.
+| MX, TXT | `@` and others | added by Cloudflare Email Routing (below) | |
+
+### Mail
+
+Mail to rich@oneroa.systems goes through Cloudflare Email Routing to Rich's Gmail, so Gmail does the spam filtering. Replies go out through Gmail as rich@oneroa.systems.
+
+To receive:
+
+1. In Cloudflare, oneroa.systems → Email → Email Routing → Get started.
+2. Under Destination addresses, add Rich's Gmail address, then click the link in the email Cloudflare sends there.
+3. Under Routing rules, add the custom address `rich`, with the action Send to an email and the Gmail address as the destination. The catch-all rule forwards every other address too, but it also forwards spam sent to made-up names, so leave it off unless it's needed.
+4. Let Cloudflare add its records: three MX records (`route1`, `route2` and `route3.mx.cloudflare.net`), an SPF TXT on `@`, and a DKIM TXT. It won't turn on while other MX records exist, so the `eforward` ones must be gone.
+
+To send as rich@oneroa.systems from Gmail:
+
+1. Turn on 2-Step Verification for the Google account, then make an app password at myaccount.google.com/apppasswords.
+2. In Gmail, Settings → See all settings → Accounts and Import → Send mail as → Add another email address. Use the name "Rich Bodo" and the address rich@oneroa.systems, and leave "Treat as an alias" ticked.
+3. For the SMTP server, use `smtp.gmail.com`, port 587, TLS. The username is the Gmail address, and the password is the app password.
+4. Gmail sends a confirmation code to rich@oneroa.systems. It arrives back in Gmail through Cloudflare. Enter it.
+5. In Cloudflare, edit the SPF TXT record on `@` so it covers Gmail too: `v=spf1 include:_spf.mx.cloudflare.net include:_spf.google.com ~all`. Edit the existing record rather than adding a second one, because a domain may have only one SPF record.
+
+Test from a different account, not from the Gmail itself. Gmail hides mail you send yourself through a forward, so it shows only in Sent. Some recipients see "via gmail.com" beside the address, because mail sent this way isn't signed by oneroa.systems. For the same reason, if a DMARC record is ever added, keep it at `p=none`.
+
+### mountainviewsmartcontracts.com
+
+The same Cloudflare account runs mountainviewsmartcontracts.com until it has a repo of its own. The domain is moving into Rich's Namecheap account. Set Cloudflare's nameservers there once it arrives, as in step 4 above.
+
+Delete the two copied `@` records pointing at 192.30.252.153 and 192.30.252.154. They're GitHub's old addresses, and they can't get a certificate. Then add:
+
+| Type | Name | Content | Proxy |
+|---|---|---|---|
+| A | `@` | the same four as oneroa.systems | DNS only |
+| AAAA | `@` | the same four as oneroa.systems | DNS only |
+| CNAME | `www` | `mvscorg.github.io` | DNS only |
+| TXT | `_github-pages-challenge-mvscorg` | the code from github.com/organizations/mvscorg/settings/pages → Add a domain | |
+
+Its MX records point at a Google Workspace. Keep them, along with the Google SPF record (`v=spf1 include:_spf.google.com ~all`) and the `google-site-verification` TXT, while anyone still uses those addresses. To switch to Email Routing instead, delete the Google MX records, then follow the mail steps above.
