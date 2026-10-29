@@ -23,13 +23,14 @@ Then open http://127.0.0.1:8765/.
 
 ## Archive photographs
 
-Every page has a black-and-white archive photo of Oneroa, credited underneath, as on mountainviewsmartcontracts.com. They're placeholders for now. To add one:
+Every page has a black-and-white archive photo, credited underneath, as on mountainviewsmartcontracts.com. Continuity's is still a placeholder. To add or change one:
 
-1. Put the file in `site/images/` (JPEG, about 1200px on the long side).
-2. In the page, replace the `<div class="placeholder" …>` inside `<figure class="archive">` with `<img src="images/FILE.jpg" alt="what the photo shows">`. A comment marks each spot.
-3. Fill in the caption: the photo's title and year, then the credit and permission line the archive asks for.
+1. Find a photo that may be used commercially, since this is a business's site. [DigitalNZ](https://digitalnz.org) searches most New Zealand archives at once; filter by usage "Use commercially" (CC BY, or no known copyright). natlib.govt.nz blocks scripts, but DigitalNZ's API (`api.digitalnz.org/v3/records.json`) doesn't.
+2. Put the file in `site/images/` (JPEG, about 1000–1200px on the long side).
+3. In the page, put `<img src="images/FILE.jpg" alt="what the photo shows">` inside `<figure class="archive">`, in place of the placeholder `<div>` if there is one.
+4. Fill in the caption: the photo's title and year, then the credit and licence the archive asks for, linked to the archive's record.
 
-The stylesheet shows every archive photo in black and white, whatever the file is. The home page's photo is cropped to 4:5, so a portrait crop works best there.
+The stylesheet shows every archive photo in black and white, whatever the file is, and crops it to 4:5, so a portrait photo works best. For a landscape photo, add the class `wide` to the figure (`<figure class="archive wide">`) to show it at 3:2 instead.
 
 ## Design
 
@@ -72,9 +73,9 @@ Set every website record to **DNS only** (grey cloud), not Proxied. Cloudflare p
 | AAAA | `@` | four records: `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` | DNS only |
 | CNAME | `www` | `richbodo.github.io` | DNS only |
 | TXT | `_github-pages-challenge-richbodo` | the code GitHub shows when you add the domain (step 5) | |
+| MX, TXT | `@` and others | added by Cloudflare Email Routing (below) | |
 
 Cloudflare adds the domain to each Name, so `www` means www.oneroa.systems. `richbodo.github.io` is GitHub's address for all of Rich's Pages sites; GitHub picks this repo because its custom domain is `oneroa.systems`, and it redirects www to the bare domain.
-| MX, TXT | `@` and others | added by Cloudflare Email Routing (below) | |
 
 ### Mail
 
@@ -85,13 +86,13 @@ To receive:
 1. In Cloudflare, oneroa.systems → Email → Email Routing → Get started.
 2. Under Destination addresses, add Rich's Gmail address, then click the link in the email Cloudflare sends there.
 3. Under Routing rules, add the custom address `rich`, with the action Send to an email and the Gmail address as the destination. The catch-all rule forwards every other address too, but it also forwards spam sent to made-up names, so leave it off unless it's needed.
-4. Let Cloudflare add its records: three MX records (`route1`, `route2` and `route3.mx.cloudflare.net`), an SPF TXT on `@`, and a DKIM TXT. It won't turn on while other MX records exist, so the `eforward` ones must be gone.
+4. Cloudflare adds its records itself, without asking: three MX records (`route1`, `route2` and `route3.mx.cloudflare.net`), an SPF TXT on `@` (`v=spf1 include:_spf.mx.cloudflare.net ~all`), and a DKIM TXT at `cf2024-1._domainkey`. It won't turn on while other MX records exist, so the `eforward` ones must be gone.
 
 To send as rich@oneroa.systems from Gmail:
 
 1. Turn on 2-Step Verification for the Google account, then make an app password at myaccount.google.com/apppasswords.
 2. In Gmail, Settings → See all settings → Accounts and Import → Send mail as → Add another email address. Use the name "Rich Bodo" and the address rich@oneroa.systems, and leave "Treat as an alias" ticked.
-3. For the SMTP server, use `smtp.gmail.com`, port 587, TLS. The username is the Gmail address, and the password is the app password.
+3. For the SMTP server, use `smtp.gmail.com` (not smtp.google.com), port 587, TLS. The username is the Gmail address, and the password is the app password; its spaces don't matter. Gmail clears the password after a failed try, and "Show error details" gives the reason: "Application-specific password required" means it got the account password instead of the app password, and "Couldn't connect to the server" means the server name is wrong.
 4. Gmail sends a confirmation code to rich@oneroa.systems. It arrives back in Gmail through Cloudflare. Enter it.
 5. In Cloudflare, edit the SPF TXT record on `@` so it covers Gmail too: `v=spf1 include:_spf.mx.cloudflare.net include:_spf.google.com ~all`. Edit the existing record rather than adding a second one, because a domain may have only one SPF record.
 

@@ -166,7 +166,7 @@ p { margin: 0 0 1rem; }
 .offers p { max-width: 30rem; }
 
 /* Inner pages: text on the left, one archive photo on the right. */
-.page { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 3.5rem; padding-top: 3.5rem; }
+.page { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 3.5rem; padding-top: 3.5rem; align-content: start; }
 .page .archive { position: sticky; top: 2rem; align-self: start; margin-top: 0.5rem; }
 
 ul.plain, ol.steps { padding-left: 1.25rem; margin: 0 0 1rem; }
@@ -177,7 +177,7 @@ ol.steps li::marker { font-family: var(--sans); font-weight: 500; color: var(--m
 .project h2 { margin-top: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1rem; }
 .status { font-family: var(--sans); font-size: 0.9375rem; font-weight: 500; background: var(--turquoise); color: var(--lichen); padding: 0.1rem 0.6rem; border-radius: 1rem; }
 
-.contact-card { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 3rem; align-items: start; padding-top: 3.5rem; }
+.contact-card { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 3rem; align-items: start; align-content: start; padding-top: 3.5rem; }
 .contact-card .email { font-family: var(--sans); font-size: 1.3125rem; font-weight: 500; }
 
 @media (max-width: 52rem) {
