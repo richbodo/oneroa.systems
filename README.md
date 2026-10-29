@@ -23,11 +23,11 @@ Then open http://127.0.0.1:8765/.
 
 ## Archive photographs
 
-Every page has a black-and-white archive photo, credited underneath, as on mountainviewsmartcontracts.com. Continuity's is still a placeholder. To add or change one:
+Every page has a black-and-white archive photo, credited underneath, as on mountainviewsmartcontracts.com. To add or change one:
 
 1. Find a photo that may be used commercially, since this is a business's site. [DigitalNZ](https://digitalnz.org) searches most New Zealand archives at once; filter by usage "Use commercially" (CC BY, or no known copyright). natlib.govt.nz blocks scripts, but DigitalNZ's API (`api.digitalnz.org/v3/records.json`) doesn't.
 2. Put the file in `site/images/` (JPEG, about 1000–1200px on the long side).
-3. In the page, put `<img src="images/FILE.jpg" alt="what the photo shows">` inside `<figure class="archive">`, in place of the placeholder `<div>` if there is one.
+3. In the page, put `<img src="images/FILE.jpg" alt="what the photo shows">` inside `<figure class="archive">`, replacing the one there.
 4. Fill in the caption: the photo's title and year, then the credit and licence the archive asks for, linked to the archive's record.
 
 The stylesheet shows every archive photo in black and white, whatever the file is, and crops it to 4:5, so a portrait photo works best. For a landscape photo, add the class `wide` to the figure (`<figure class="archive wide">`) to show it at 3:2 instead.
