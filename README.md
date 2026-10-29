@@ -73,9 +73,9 @@ Set every website record to **DNS only** (grey cloud), not Proxied. Cloudflare p
 | AAAA | `@` | four records: `2606:50c0:8000::153`, `2606:50c0:8001::153`, `2606:50c0:8002::153`, `2606:50c0:8003::153` | DNS only |
 | CNAME | `www` | `richbodo.github.io` | DNS only |
 | TXT | `_github-pages-challenge-richbodo` | the code GitHub shows when you add the domain (step 5) | |
+| MX, TXT | `@` and others | added by Cloudflare Email Routing (below) | |
 
 Cloudflare adds the domain to each Name, so `www` means www.oneroa.systems. `richbodo.github.io` is GitHub's address for all of Rich's Pages sites; GitHub picks this repo because its custom domain is `oneroa.systems`, and it redirects www to the bare domain.
-| MX, TXT | `@` and others | added by Cloudflare Email Routing (below) | |
 
 ### Mail
 
@@ -86,13 +86,13 @@ To receive:
 1. In Cloudflare, oneroa.systems → Email → Email Routing → Get started.
 2. Under Destination addresses, add Rich's Gmail address, then click the link in the email Cloudflare sends there.
 3. Under Routing rules, add the custom address `rich`, with the action Send to an email and the Gmail address as the destination. The catch-all rule forwards every other address too, but it also forwards spam sent to made-up names, so leave it off unless it's needed.
-4. Let Cloudflare add its records: three MX records (`route1`, `route2` and `route3.mx.cloudflare.net`), an SPF TXT on `@`, and a DKIM TXT. It won't turn on while other MX records exist, so the `eforward` ones must be gone.
+4. Cloudflare adds its records itself, without asking: three MX records (`route1`, `route2` and `route3.mx.cloudflare.net`), an SPF TXT on `@` (`v=spf1 include:_spf.mx.cloudflare.net ~all`), and a DKIM TXT at `cf2024-1._domainkey`. It won't turn on while other MX records exist, so the `eforward` ones must be gone.
 
 To send as rich@oneroa.systems from Gmail:
 
 1. Turn on 2-Step Verification for the Google account, then make an app password at myaccount.google.com/apppasswords.
 2. In Gmail, Settings → See all settings → Accounts and Import → Send mail as → Add another email address. Use the name "Rich Bodo" and the address rich@oneroa.systems, and leave "Treat as an alias" ticked.
-3. For the SMTP server, use `smtp.gmail.com`, port 587, TLS. The username is the Gmail address, and the password is the app password.
+3. For the SMTP server, use `smtp.gmail.com` (not smtp.google.com), port 587, TLS. The username is the Gmail address, and the password is the app password; its spaces don't matter. Gmail clears the password after a failed try, and "Show error details" gives the reason: "Application-specific password required" means it got the account password instead of the app password, and "Couldn't connect to the server" means the server name is wrong.
 4. Gmail sends a confirmation code to rich@oneroa.systems. It arrives back in Gmail through Cloudflare. Enter it.
 5. In Cloudflare, edit the SPF TXT record on `@` so it covers Gmail too: `v=spf1 include:_spf.mx.cloudflare.net include:_spf.google.com ~all`. Edit the existing record rather than adding a second one, because a domain may have only one SPF record.
 
